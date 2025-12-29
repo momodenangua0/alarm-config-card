@@ -3,11 +3,17 @@ class AlarmConfigCard extends HTMLElement {
   private _config: AlarmConfigCardConfig | null = null;
   private _inputValue = "";
   private _statusMessage = "";
+  private _selectedEntity = "";
+  private _triggerType = "motion";
+  private _alertMethod = "sound";
 
   static getStubConfig(): AlarmConfigCardConfig {
     return {
       type: "custom:alarm-config-card",
       entity: "sensor.alarm_config_responsible_people",
+      alarm_entity: "",
+      trigger_type: "motion",
+      alert_method: "sound",
     };
   }
 
@@ -21,6 +27,9 @@ class AlarmConfigCard extends HTMLElement {
       entity: "sensor.alarm_config_responsible_people",
       ...config,
     };
+    this._selectedEntity = this._config.alarm_entity || "";
+    this._triggerType = this._config.trigger_type || "motion";
+    this._alertMethod = this._config.alert_method || "sound";
 
     if (!this.shadowRoot) {
       this.attachShadow({ mode: "open" });
@@ -62,6 +71,15 @@ class AlarmConfigCard extends HTMLElement {
     }
 
     const missingEntity = !stateObj;
+    const entityOptions = this._getEntityOptions();
+    const entitySelectOptions = entityOptions.length
+      ? entityOptions
+          .map((entityId) => {
+            const selected = entityId === this._selectedEntity ? " selected" : "";
+            return `<option value="${this._escapeHtml(entityId)}"${selected}>${this._escapeHtml(entityId)}</option>`;
+          })
+          .join("")
+      : `<option value="">No entities available</option>`;
 
     this.shadowRoot.innerHTML = `
       <style>
@@ -80,6 +98,25 @@ class AlarmConfigCard extends HTMLElement {
           font-size: 0.9rem;
           color: var(--secondary-text-color);
           margin-bottom: 8px;
+        }
+        .section {
+          margin-bottom: 16px;
+        }
+        .field {
+          display: grid;
+          gap: 6px;
+          margin-bottom: 10px;
+        }
+        label {
+          font-size: 0.85rem;
+          color: var(--secondary-text-color);
+        }
+        select {
+          padding: 6px 8px;
+          border-radius: 6px;
+          border: 1px solid var(--divider-color);
+          background: var(--card-background-color);
+          color: var(--primary-text-color);
         }
         textarea {
           width: 100%;
@@ -122,7 +159,37 @@ class AlarmConfigCard extends HTMLElement {
       </style>
       <ha-card>
         <div class="title">Alarm Config</div>
-        <div class="help">One responsible person or notify service per line.</div>
+        <div class="section">
+          <div class="help">Select a target entity and define how the alarm should trigger.</div>
+          <div class="field">
+            <label for="alarm-entity">Target entity</label>
+            <select id="alarm-entity">
+              <option value="">Select an entity</option>
+              ${entitySelectOptions}
+            </select>
+          </div>
+          <div class="field">
+            <label for="trigger-type">Trigger type</label>
+            <select id="trigger-type">
+              <option value="motion">Motion detected</option>
+              <option value="attic_motion">Attic motion (any time)</option>
+              <option value="door_open_60s">Door open 60s</option>
+              <option value="panic_button">Panic button</option>
+              <option value="smoke">Smoke detector</option>
+              <option value="emergency_exit">Emergency exit opened</option>
+              <option value="emergency_button">Emergency button</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="alert-method">Alert method</label>
+            <select id="alert-method">
+              <option value="sound">Sound alert</option>
+              <option value="mobile">HA mobile notification</option>
+              <option value="email">Email notification</option>
+            </select>
+          </div>
+        </div>
+        <div class="help">Responsible people (one per line).</div>
         <textarea id="people">${this._escapeHtml(this._inputValue)}</textarea>
         <div class="actions">
           <button id="save">Save</button>
@@ -137,6 +204,30 @@ class AlarmConfigCard extends HTMLElement {
     if (textarea) {
       textarea.addEventListener("input", (event) => {
         this._inputValue = (event.target as HTMLTextAreaElement).value;
+      });
+    }
+
+    const entitySelect = this.shadowRoot.getElementById("alarm-entity") as HTMLSelectElement | null;
+    if (entitySelect) {
+      entitySelect.value = this._selectedEntity;
+      entitySelect.addEventListener("change", (event) => {
+        this._selectedEntity = (event.target as HTMLSelectElement).value;
+      });
+    }
+
+    const triggerSelect = this.shadowRoot.getElementById("trigger-type") as HTMLSelectElement | null;
+    if (triggerSelect) {
+      triggerSelect.value = this._triggerType;
+      triggerSelect.addEventListener("change", (event) => {
+        this._triggerType = (event.target as HTMLSelectElement).value;
+      });
+    }
+
+    const alertSelect = this.shadowRoot.getElementById("alert-method") as HTMLSelectElement | null;
+    if (alertSelect) {
+      alertSelect.value = this._alertMethod;
+      alertSelect.addEventListener("change", (event) => {
+        this._alertMethod = (event.target as HTMLSelectElement).value;
       });
     }
 
@@ -158,6 +249,11 @@ class AlarmConfigCard extends HTMLElement {
     this._hass.callService("alarm_config", "set_responsible_people", {
       people: this._inputValue || "",
     });
+    if (this._config) {
+      this._config.alarm_entity = this._selectedEntity;
+      this._config.trigger_type = this._triggerType;
+      this._config.alert_method = this._alertMethod;
+    }
     this._statusMessage = "Saved";
     this._render();
   }
@@ -180,11 +276,30 @@ class AlarmConfigCard extends HTMLElement {
       .replace(/\"/g, "&quot;")
       .replace(/'/g, "&#39;");
   }
+
+  private _getEntityOptions(): string[] {
+    if (!this._hass || !this._hass.states) {
+      return [];
+    }
+    const allowedDomains = new Set([
+      "binary_sensor",
+      "sensor",
+      "switch",
+      "lock",
+      "cover",
+    ]);
+    return Object.keys(this._hass.states)
+      .filter((entityId) => allowedDomains.has(entityId.split(".")[0]))
+      .sort();
+  }
 }
 
 interface AlarmConfigCardConfig {
   type?: string;
   entity?: string;
+  alarm_entity?: string;
+  trigger_type?: string;
+  alert_method?: string;
 }
 
 customElements.define("alarm-config-card", AlarmConfigCard);
