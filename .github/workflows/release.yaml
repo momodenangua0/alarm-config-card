@@ -1,0 +1,41 @@
+name: Release Build & Publish
+
+on:
+  release:
+    types:
+      - published
+  # ADD THIS SECTION:
+  workflow_dispatch:
+
+jobs:
+  build_and_release:
+    name: Build, Zip, and Upload
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: 馃泹锔?Checkout repo
+        uses: actions/checkout@v4
+
+      - name: 馃煝 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 馃捒 Install & Build
+        run: |
+          npm install
+          npm run build
+
+      - name: 馃 Zip Integration
+        run: |
+          cd custom_components/alarm_config_card
+          zip -r ../../alarm_config_card.zip .
+
+      # Update this step to handle manual runs (workflow_dispatch)
+      - name: 鈽侊笍 Upload zip to release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: alarm_config_card.zip
