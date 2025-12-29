@@ -1,34 +1,15 @@
-# Alarm Config Card Integration
+# Alarm Config Card
 
-A professional timer integration for Home Assistant with precise countdown functionality and daily runtime tracking.
+Manage responsible people for alarms from a Lovelace card.
 
 ## Key Features
 
-馃晲 **Precise Timer Control** - Set countdown timers from 1-1000 minutes for any switch, input_boolean, light, or fan
-
-馃搳 **Daily Runtime Tracking** - Automatically tracks and displays daily usage time in HH:MM format
-
-馃攧 **Smart Auto-Cancel** - Timer automatically cancels if the controlled device is turned off externally
-
-馃帹 **Professional Timer Card** - Beautiful, modern UI with customizable timer buttons and real-time countdown
-
-馃敂 **Notification Support** - Optional notifications for timer start, finish, and cancellation events
-
-馃寵 **Midnight Reset** - Daily usage statistics reset automatically at midnight
-
-## Perfect For
-
-- **Kitchen Timers** - Control smart switches for appliances
-- **Boiler Control** - Manage water heater schedules  
-- **Garden Irrigation** - Time watering systems
-- **Lighting Control** - Automatic light timers
-- **HVAC Management** - Climate control scheduling
+- Edit a list of responsible people or notify services in one place
+- Save or clear the list with a single click
+- Clear error message when the target entity is missing
 
 ## Easy Setup
 
 1. Install via HACS
-2. Add integration and select your device
-3. Add the timer card to your dashboard
-4. Customize timer buttons and notifications
-
-No complex configuration required - works out of the box with professional results!
+2. Add the card to your dashboard
+3. Point it to your `sensor.alarm_config_responsible_people` entity

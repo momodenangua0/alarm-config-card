@@ -5,9 +5,9 @@
   "codeowners": ["@ArikShemesh"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://github.com/ArikShemesh/alarm-config-card",
+  "documentation": "https://github.com/momodenangua0/alarm-config-card",
   "iot_class": "local_polling",
-  "issue_tracker": "https://github.com/ArikShemesh/alarm-config-card/issues",
+  "issue_tracker": "https://github.com/momodenangua0/alarm-config-card/issues",
   "loggers": ["custom_components.alarm_config_card"],
   "requirements": [],
   "version": "1.3.62"

@@ -20,7 +20,7 @@ def _validate_time_string(time_str: str) -> bool:
     except ValueError:
         return False
 
-class AlarmConfigCardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class SimpleTimerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Alarm Config Card."""
     VERSION = 1
 
@@ -265,10 +265,10 @@ class AlarmConfigCardConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> config_entries.OptionsFlow:
         """Get the options flow for this handler."""
-        return AlarmConfigCardOptionsFlow(config_entry)
+        return SimpleTimerOptionsFlow(config_entry)
 
 
-class AlarmConfigCardOptionsFlow(config_entries.OptionsFlow):
+class SimpleTimerOptionsFlow(config_entries.OptionsFlow):
     """Handle options flow for Alarm Config Card."""
 
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:

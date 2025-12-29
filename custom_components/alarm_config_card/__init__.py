@@ -184,7 +184,7 @@ async def async_setup(hass: HomeAssistant, _: dict) -> bool:
         if sensor:
             await sensor._send_notification(message)
         else:
-            raise ValueError(f"No Alarm Config Card sensor found for entry_id: {entry_id}")
+            raise ValueError(f"No alarm config card sensor found for entry_id: {entry_id}")
 
     async def start_timer(call: ServiceCall):
         """Handle the service call to start the device timer."""
@@ -204,7 +204,7 @@ async def async_setup(hass: HomeAssistant, _: dict) -> bool:
         if sensor:
             await sensor.async_start_timer(duration, unit, reverse_mode, start_method)
         else:
-            raise ValueError(f"No Alarm Config Card sensor found for entry_id: {entry_id}")
+            raise ValueError(f"No alarm config card sensor found for entry_id: {entry_id}")
 
     async def cancel_timer(call: ServiceCall):
         """Handle the service call to cancel the device timer."""
@@ -220,7 +220,7 @@ async def async_setup(hass: HomeAssistant, _: dict) -> bool:
         if sensor:
             await sensor.async_cancel_timer()
         else:
-            raise ValueError(f"No Alarm Config Card sensor found for entry_id: {entry_id}")
+            raise ValueError(f"No alarm config card sensor found for entry_id: {entry_id}")
 
     async def update_switch_entity(call: ServiceCall):
         """Handle the service call to update the switch entity for the sensor."""
@@ -237,7 +237,7 @@ async def async_setup(hass: HomeAssistant, _: dict) -> bool:
         if sensor:
             await sensor.async_update_switch_entity(switch_entity_id)
         else:
-            raise ValueError(f"No Alarm Config Card sensor found for entry_id: {entry_id}")
+            raise ValueError(f"No alarm config card sensor found for entry_id: {entry_id}")
 
     async def force_name_sync(call: ServiceCall):
         """Handle the service call to force immediate name synchronization."""
@@ -251,7 +251,7 @@ async def async_setup(hass: HomeAssistant, _: dict) -> bool:
                     result = await sensor.async_force_name_sync()
                     if result:
                         return
-            raise ValueError(f"No Alarm Config Card sensor found for entry_id: {entry_id}")
+            raise ValueError(f"No alarm config card sensor found for entry_id: {entry_id}")
         else:
             # Sync all entries
             synced_count = 0
@@ -283,7 +283,7 @@ async def async_setup(hass: HomeAssistant, _: dict) -> bool:
         if sensor:
             await sensor.async_manual_power_toggle(action)
         else:
-            raise ValueError(f"No Alarm Config Card sensor found for entry_id: {entry_id}")
+            raise ValueError(f"No alarm config card sensor found for entry_id: {entry_id}")
             
     async def reset_daily_usage(call: ServiceCall):
         """Handle manual daily usage reset."""
@@ -299,7 +299,7 @@ async def async_setup(hass: HomeAssistant, _: dict) -> bool:
         if sensor:
             await sensor.async_reset_daily_usage()
         else:
-            raise ValueError(f"No Alarm Config Card sensor found for entry_id: {entry_id}")
+            raise ValueError(f"No alarm config card sensor found for entry_id: {entry_id}")
             
     async def reload_resources(call: ServiceCall):
         """Reload frontend resources with current manifest version."""
@@ -385,7 +385,7 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
     pass
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a Alarm Config Card config entry."""
+    """Unload a single Alarm Config Card config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id, None)

@@ -1,4 +1,4 @@
-"""Alarm Config Card 鈥?runtime counter + countdown timer sensor."""
+"""Alarm Config Card – runtime counter + countdown timer sensor."""
 from __future__ import annotations
 
 import asyncio
@@ -259,77 +259,6 @@ class TimerRuntimeSensor(SensorEntity, RestoreEntity):
         except Exception as e:
             _LOGGER.error(f"Alarm Config Card: [{self._entry_id}] Error getting notification config: {e}")
             return [], False
-
-    def _search_cards_in_config(self, config: dict) -> tuple[str | None, bool]:
-        """Recursively search for timer cards in lovelace config (LEGACY - for migration warning only)."""
-        if isinstance(config, dict):
-            # Check if this is a timer card for our instance
-            if (config.get('type') == 'custom:alarm-config-card' and 
-                config.get('timer_instance_id') == self._entry_id):
-                notification_entity = config.get('notification_entity')
-                show_seconds = config.get('show_seconds', False)
-                if notification_entity and notification_entity != 'none_selected':
-                    return notification_entity, show_seconds
-            
-            # Search nested structures
-            for value in config.values():
-                if isinstance(value, (dict, list)):
-                    result = self._search_cards_in_config(value)
-                    if result[0]:
-                        return result
-                        
-        elif isinstance(config, list):
-            for item in config:
-                if isinstance(item, (dict, list)):
-                    result = self._search_cards_in_config(item)
-                    if result[0]:
-                        return result
-        
-        return None, False
-
-    async def _get_notification_from_storage(self) -> tuple[str | None, bool]:
-        """Get notification config from storage files using async operations (LEGACY - for migration warning only)."""
-        try:
-            import json
-            import asyncio
-            
-            storage_path = self.hass.config.path('.storage')
-            
-            try:
-                # List files asynchronously
-                loop = asyncio.get_event_loop()
-                import os
-                filenames = await loop.run_in_executor(None, os.listdir, storage_path)
-            except (OSError, FileNotFoundError):
-                return None, False
-                
-            # Search through lovelace storage files
-            for filename in filenames:
-                if filename.startswith('lovelace'):
-                    try:
-                        file_path = os.path.join(storage_path, filename)
-                        content = await loop.run_in_executor(None, self._read_file_sync, file_path)
-                        if content:
-                            data = json.loads(content)
-                            if 'data' in data and 'config' in data['data']:
-                                notification_entity, show_seconds = self._search_cards_in_config(data['data']['config'])
-                                if notification_entity:
-                                    return notification_entity, show_seconds
-                    except (json.JSONDecodeError, KeyError, IOError, UnicodeDecodeError):
-                        continue
-                        
-        except Exception as e:
-            _LOGGER.debug(f"Alarm Config Card: [{self._entry_id}] Could not read storage files: {e}")
-        
-        return None, False
-
-    def _read_file_sync(self, file_path: str) -> str | None:
-        """Synchronous file reading helper for executor."""
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return f.read()
-        except (IOError, UnicodeDecodeError):
-            return None
 
     def _format_time_for_notification(self, total_seconds: float, show_seconds: bool = False) -> tuple[str, str]:
         """Format time for notifications."""
@@ -993,7 +922,7 @@ class TimerRuntimeSensor(SensorEntity, RestoreEntity):
                 await self._stop_realtime_accumulation()
         
         # Send notification
-        await self._send_notification(f"Timer finished 鈥?daily usage {formatted_time} {label}")
+        await self._send_notification(f"Timer finished – daily usage {formatted_time} {label}")
         
         self.async_write_ha_state()
         

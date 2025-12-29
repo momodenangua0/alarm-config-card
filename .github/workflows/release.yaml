@@ -15,27 +15,27 @@ jobs:
       contents: write
 
     steps:
-      - name: 馃泹锔?Checkout repo
+      - name: 🛍️ Checkout repo
         uses: actions/checkout@v4
 
-      - name: 馃煝 Setup Node.js
+      - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: 馃捒 Install & Build
+      - name: 💿 Install & Build
         run: |
           npm install
           npm run build
 
-      - name: 馃 Zip Integration
+      - name: 🤐 Zip Integration
         run: |
-          cd custom_components/alarm_config_card
-          zip -r ../../alarm_config_card.zip .
+          cd custom_components/simple_timer
+          zip -r ../../simple_timer.zip .
 
       # Update this step to handle manual runs (workflow_dispatch)
-      - name: 鈽侊笍 Upload zip to release
+      - name: ☁️ Upload zip to release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: alarm_config_card.zip
+          files: simple_timer.zip
