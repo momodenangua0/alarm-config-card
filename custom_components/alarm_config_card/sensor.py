@@ -260,6 +260,10 @@ class TimerRuntimeSensor(SensorEntity, RestoreEntity):
             _LOGGER.error(f"Alarm Config Card: [{self._entry_id}] Error getting notification config: {e}")
             return [], False
 
+    def _is_alarm_enabled(self) -> bool:
+        """Return whether alarm notifications are enabled for this entry."""
+        return self._entry.data.get("alarm_enabled", True)
+
     def _format_time_for_notification(self, total_seconds: float, show_seconds: bool = False) -> tuple[str, str]:
         """Format time for notifications."""
         if show_seconds:
@@ -314,6 +318,10 @@ class TimerRuntimeSensor(SensorEntity, RestoreEntity):
     async def _send_notification(self, message: str) -> None:
         """Send notification using configured notification entities."""
         try:
+            if not self._is_alarm_enabled():
+                _LOGGER.debug(f"Alarm Config Card: [{self._entry_id}] Alarm disabled - staying silent")
+                return
+
             notification_entities, show_seconds = await self._get_card_notification_config()
             
             if not notification_entities:

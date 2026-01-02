@@ -14,6 +14,9 @@ from homeassistant.components.frontend import async_register_built_in_panel, add
 from homeassistant.components.lovelace.resources import ResourceStorageCollection
 
 from .const import DOMAIN, PLATFORMS
+from .alarm_manager import AlarmConfigManager
+from .responsible_manager import ResponsiblePeopleManager
+from .websocket_api import async_setup_websocket
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,14 +41,19 @@ async def copy_frontend_files(hass: HomeAssistant) -> bool:
         # Source: custom_components/alarm_config_card/dist/alarm-config-card.js
         integration_path = os.path.dirname(__file__)
         source_file = os.path.join(integration_path, "dist", "alarm-config-card.js")
+        responsible_source = os.path.join(integration_path, "dist", "alarm-responsible-card.js")
         
         # Destination: config/www/alarm-config-card/alarm-config-card.js
         www_dir = hass.config.path("www", "alarm-config-card")
         dest_file = os.path.join(www_dir, "alarm-config-card.js")
+        responsible_dest = os.path.join(www_dir, "alarm-responsible-card.js")
         
         # Run the file copy in executor to avoid blocking I/O
         success = await hass.async_add_executor_job(
             _copy_file_sync, source_file, dest_file, www_dir
+        )
+        await hass.async_add_executor_job(
+            _copy_file_sync, responsible_source, responsible_dest, www_dir
         )
         
         if success:
@@ -133,6 +141,7 @@ async def async_setup(hass: HomeAssistant, _: dict) -> bool:
     # Initialize the frontend resource
     version = getattr(hass.data["integrations"][DOMAIN], "version", "1.0.0")
     await init_resource(hass, "/local/alarm-config-card/alarm-config-card.js", str(version))
+    await init_resource(hass, "/local/alarm-config-card/alarm-responsible-card.js", str(version))
 
     # Schema for the timer services
     SERVICE_START_TIMER_SCHEMA = vol.Schema({
@@ -168,6 +177,20 @@ async def async_setup(hass: HomeAssistant, _: dict) -> bool:
         vol.Required("entry_id"): cv.string,
     })
     SERVICE_RELOAD_RESOURCES_SCHEMA = vol.Schema({})
+    SERVICE_SET_CARD_CONFIG_SCHEMA = vol.Schema({
+        vol.Required("config_id"): cv.string,
+        vol.Required("config"): dict,
+    })
+    SERVICE_SET_RESPONSIBLE_SCHEMA = vol.Schema({
+        vol.Required("services"): list,
+    })
+
+    if "alarm_manager" not in hass.data[DOMAIN]:
+        hass.data[DOMAIN]["alarm_manager"] = AlarmConfigManager(hass)
+        await hass.data[DOMAIN]["alarm_manager"].async_load()
+    if "responsible_manager" not in hass.data[DOMAIN]:
+        hass.data[DOMAIN]["responsible_manager"] = ResponsiblePeopleManager(hass)
+        await hass.data[DOMAIN]["responsible_manager"].async_load()
 
     async def test_notification(call: ServiceCall):
         """Test notification functionality."""
@@ -338,6 +361,19 @@ async def async_setup(hass: HomeAssistant, _: dict) -> bool:
             _LOGGER.error(f"Alarm Config Card: Resource reload failed: {e}")
             raise
 
+    async def set_card_config(call: ServiceCall):
+        """Persist card config and update trigger listeners."""
+        config_id = call.data.get("config_id")
+        config = call.data.get("config", {})
+        manager: AlarmConfigManager = hass.data[DOMAIN]["alarm_manager"]
+        await manager.async_set_config(config_id, config)
+
+    async def set_responsible_people(call: ServiceCall):
+        """Persist responsible people services."""
+        services = call.data.get("services", [])
+        manager: ResponsiblePeopleManager = hass.data[DOMAIN]["responsible_manager"]
+        await manager.async_set_services(services)
+
     # Register all services
     hass.services.async_register(
         DOMAIN, "start_timer", start_timer, schema=SERVICE_START_TIMER_SCHEMA
@@ -363,13 +399,21 @@ async def async_setup(hass: HomeAssistant, _: dict) -> bool:
     hass.services.async_register(
         DOMAIN, "reload_resources", reload_resources, schema=vol.Schema({})
     )
+    hass.services.async_register(
+        DOMAIN, "set_card_config", set_card_config, schema=SERVICE_SET_CARD_CONFIG_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, "set_responsible_people", set_responsible_people, schema=SERVICE_SET_RESPONSIBLE_SCHEMA
+    )
+
+    await async_setup_websocket(hass)
 
     hass.data[DOMAIN]["services_registered"] = True
     return True
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a single Alarm Config Card config entry."""
-    hass.data[DOMAIN][entry.entry_id] = {"sensor": None} # Initialize with None
+    hass.data[DOMAIN][entry.entry_id] = {"sensor": None, "switch": None} # Initialize with None
     
     # Add update listener to block title-only changes (3-dots rename)
     entry.add_update_listener(_async_update_listener)

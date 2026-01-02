@@ -119,3 +119,31 @@ reload_resources:
   name: Reload Frontend Resources
   description: Manually reload and update the Alarm Config Card frontend resources with the current version
   fields: {}
+
+set_card_config:
+  name: Set Card Config
+  description: Persist card config and update alarm triggers
+  fields:
+    config_id:
+      name: Config ID
+      description: Unique id for this card config
+      required: true
+      selector:
+        text:
+    config:
+      name: Config
+      description: Full card config payload
+      required: true
+      selector:
+        object: {}
+
+set_responsible_people:
+  name: Set Responsible People
+  description: Persist responsible people notification services
+  fields:
+    services:
+      name: Services
+      description: List of notify.mobile_app services to notify
+      required: true
+      selector:
+        object: {}
